@@ -1,0 +1,39 @@
+#!/bin/zsh
+set -e
+
+cd $0:h
+mkdir -p geoip
+cd geoip
+curl -O -L -C - https://geolite.maxmind.com/download/geoip/database/GeoLite2-City-CSV.zip
+
+unzip -f -j GeoLite2-City-CSV.zip "*-IPv4.csv" "*-en.csv" -d .
+
+csv_fields(){
+	#perl -CSDA -MText::CSV=csv -wE 'my($i,@h)=@ARGV;my@aoa;my $a=csv(in=>$i, headers => "auto");for my$k(@$a){push @aoa, [map{$k->{$_}} @h]};csv(in =>\@aoa, out =>\*STDOUT);' $@
+	perl -CSDA -MText::CSV -wE 'my@h=@ARGV;my$c=new Text::CSV({eol=>$/});$c->column_names(@{$c->getline(\*STDIN)});$c->print(\*STDOUT, \@h);while(my$r=$c->getline_hr(\*STDIN)){$c->print(\*STDOUT,[map{$r->{$_}} @h])};' $@
+}
+
+sudo -u postgres psql -v ON_ERROR_STOP=1 mk << EOF
+drop table geoip.city;
+drop table geoip.blocks;
+drop index geoip.blocks_idx;
+drop index geoip.city_idx;
+create table geoip.city (geoname_id integer, locale_code text, country_iso_code text, country_name text,city_name text);
+create table geoip.blocks (network cidr, geoname_id integer);
+EOF
+
+F=(geoname_id locale_code country_iso_code country_name city_name)
+csv_fields $F < GeoLite2-City-Locations-en.csv | sudo -u postgres psql -v ON_ERROR_STOP=1 mk -c "\copy geoip.city(${(j:,:)F}) FROM STDIN DELIMITER ',' CSV HEADER;"
+
+F=(network geoname_id)
+csv_fields $F < GeoLite2-City-Blocks-IPv4.csv | sudo -u postgres psql -v ON_ERROR_STOP=1 mk -c "\copy geoip.blocks(${(j:,:)F}) FROM STDIN DELIMITER ',' CSV HEADER;"
+
+
+sudo -u postgres psql -v ON_ERROR_STOP=1 mk << EOF
+create index blocks_idx on geoip.blocks using gist(network inet_ops);
+create index city_idx on geoip.city using btree(geoname_id);
+GRANT usage ON SCHEMA geoip TO "disarmer"; 
+GRANT SELECT ON ALL TABLES IN SCHEMA geoip TO "disarmer"; 
+EOF
+
+#select country_iso_code,country_name,city_name from geoip.blocks natural join geoip.city id where network >> '46.39.247.27' limit 1;

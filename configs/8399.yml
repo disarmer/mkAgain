@@ -1,0 +1,13 @@
+args: 
+  - tail
+  - -n0
+  - -f
+  - /home/disarmer/.teeworlds/server-ng/debugn5.log
+
+#globalmapfiter: mk_
+
+options: 
+  #опции, которые напрямую попадают в конфиг
+  sv_port: 8399
+  ec_port: 8399
+  sv_name: mila race

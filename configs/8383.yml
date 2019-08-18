@@ -1,0 +1,14 @@
+args: 
+  - tail
+  - -n0
+  - -f
+  - /home/disarmer/.teeworlds/server-ng/8383.log
+
+votemanager:
+  globalmapfilter: multimap
+
+options: 
+  #опции, которые напрямую попадают в конфиг
+  sv_port: 8383
+  ec_port: 8383
+  sv_name: multi mila

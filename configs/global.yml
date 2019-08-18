@@ -1,0 +1,44 @@
+votemanager:
+  globalmapfilter: .
+  mapsperpage: 50
+  mapdir: /home/disarmer/.teeworlds/maps/07
+  voteswitch:
+    clones:
+      - off: "sv_suicide_prevention 0"
+      - on:  "sv_suicide_prevention 1"
+#    weak bullets:
+#      - on:  "tune gun_curvature 5"
+#      - off: "tune gun_curvature 0"
+
+options: 
+  #опции, которые напрямую попадают в конфиг
+  ec_password: 404
+  ec_output_level: 2
+  ec_bindaddr: 127.0.0.1
+  sv_map: ddrace_destiny
+  sv_gametype: DDRace
+  sv_suicide_prevention: 1
+  sv_max_clients: 64
+  sv_player_slots: 64
+  sv_max_clients_per_ip: 5
+  sv_register: 1
+  sv_broadcast: .
+  sv_welcome: ""
+  sv_motd: "Hoster e-mail: disarmer.mk@gmail.com"
+  sv_test_cmds: 1
+  sv_spamprotection: 1
+  sv_vote_kick_bantime: 6
+  sv_max_afk_time: 900
+  conn_timeout: 30
+  sv_map_window: 15
+  sv_loltext_hspace: 0
+  sv_vote_kick_min: 5
+  sv_tune_reset: 1
+  sv_ddrace_tune_reset: 1
+  sv_slash_me: 1
+  sv_emoticon_delay: 600
+  sv_announcement_interval: 30
+  sv_vote_pause_time: 45
+  sv_vote_spectate_rejoindelay: 60
+  sv_swap: 1
+  sv_rcon_max_tries: 5

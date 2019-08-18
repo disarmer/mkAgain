@@ -1,0 +1,10 @@
+args: 
+  - tail
+  - -n0
+  - -f
+  - /home/disarmer/.teeworlds/server-ng/8398.log
+
+options: 
+  sv_port: 8398
+  ec_port: 8398
+  sv_name: Фемка race
