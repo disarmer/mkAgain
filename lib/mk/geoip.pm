@@ -14,6 +14,7 @@ sub get {
 		$addr,
 		sub {
 			my ($dbh, $rows, $rv)=@_;
+			return unless defined $rows->[0];
 			$sub->(@{$rows->[0]});
 		});
 }

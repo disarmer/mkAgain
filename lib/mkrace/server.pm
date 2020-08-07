@@ -7,7 +7,7 @@ use Data::Dumper;
 use JSON qw/decode_json/;
 use AnyEvent::Handle;
 use YAML::XS;
-use mk::utils qw/ratelimit hash_merge/;
+use mk::utils qw/hash_merge/;
 use mkrace::player;
 use mkrace::votemanager;
 use open qw(:std :utf8);
@@ -24,16 +24,18 @@ sub new {
 	my $cfg=loadconfig($self->{config});
 	$self=hash_merge($self, $cfg);
 	$self->{name}=$self->{options}->{sv_name}=~y/ /_/r;
-	$self->{outconffile}="generated/".$self->{name}.".conf";
-	$self->{vote}=mkrace::votemanager->new(srv=>$self,%{$self->{votemanager}});
-	$self->{options}->{sv_map}=$self->{vote}->randommap;
+	$self->{id}=$self->{options}->{sv_port};
+	$self->{outconffile}=$self->{basedir}."/configs/".$self->{id}.".conf";
+	$self->{vote}=mkrace::votemanager->new(srv=>$self, %{$self->{votemanager}});
+
+	#$self->{options}->{sv_map}=$self->{vote}->randommap;
 	return bless $self, __PACKAGE__;
 }
 
 sub loadconfig {
 	my ($input)=@_;
 	my $conf={};
-	for my $file ("configs/global.yml","configs/secure.yml", $input) {
+	for my $file ("configs/global.yml", "configs/secure.yml", $input) {
 		my $loaded={};
 		eval {$loaded=YAML::XS::LoadFile $file} or return AE::log crit=>"can't parse yaml config: $file";
 		$conf=hash_merge($conf, $loaded);
@@ -43,18 +45,36 @@ sub loadconfig {
 
 sub reload {
 	my $self=shift;
-	return __PACKAGE__->new(%{$self});
+	my $new=__PACKAGE__->new(%{$self});
+	$new->setconfig;
+	$self->ecmd(exec=>"configs/".$self->{id}.".conf");
+	return $new;
+}
+
+sub setconfig {
+	my $self=shift;
+	open my $CFG, ">", $self->{outconffile};
+	print $CFG join $/, linearize($self->{options}, "");
+}
+
+sub linearize {
+	my ($d, $prefix)=@_;
+	my @res;
+	for (sort keys %$d) {
+		if (ref $d->{$_}) {
+			push @res, linearize($d->{$_}, "$prefix $_");
+		} else {
+			push @res, join " ", grep {length} $prefix, $_, $d->{$_};
+		}
+	}
+	return @res;
 }
 
 sub start {
 	my $self=shift;
 	my $prevbuf="";
 
-	open my $CFG, ">", $self->{outconffile};
-	for my $key (sort keys %{$self->{options}}) {
-		printf $CFG "%s %s\n", $key, $self->{options}->{$key};
-	}
-
+	$self->setconfig;
 	$self->{cv}=run_cmd $self->{args},
 	  '$$'=>$self->{pid},
 	  '>'=>sub {
@@ -71,7 +91,7 @@ sub start {
 				next;
 			}
 			my $event=$j->{event};
-			my $targ=$event=~m/vote/?$self->{vote}:$self;
+			my $targ=$event=~m/vote/ ? $self->{vote} : $self;
 			$targ->can($event) or $event="default";
 			$targ->$event($j);
 		}
@@ -223,7 +243,7 @@ sub chat {
 	#AE::log info=>"$self->{name}: chat:". Dumper $j;
 	for my $p (@{$self->{players}}) {
 		next unless $p;
-		next if $j->{to}->{id} >= 0;
+		next if $j->{whisper};
 		$p->chathook($j);
 	}
 	my $plr=$self->{players}->[$j->{from}->{id}];

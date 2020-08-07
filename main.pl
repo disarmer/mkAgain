@@ -8,16 +8,8 @@ use mk::logconfig;
 use Module::Refresh;
 
 use mk::opts {
-	poolmin=>{
-		getopt=>"poolmin=i",
-		desc=>"minimum pool size",
-		value=>3,
-	},
-	poolmax=>{
-		getopt=>"poolmax=i",
-		desc=>"maximum pool size",
-		value=>5,
-	},
+	poolmin=>3,
+	poolmax=>5,
 };
 
 BEGIN {push @INC, $0=~s%/[^/]+$%/lib%r}
@@ -69,8 +61,8 @@ sub reload {
 
 sub startserver {
 	my %opts=@_;
-	if (keys %servers > mk::opts::POOLMIN and not $opts{force}) {return AE::log warn=>"refuse to start due poolmin constraint";}
-	if (keys %servers >= mk::opts::POOLMAX) {return AE::log warn=>"refuse to start due poolmax constraint";}
+	if (keys %servers > POOLMIN and not $opts{force}) {return AE::log warn=>"refuse to start due poolmin constraint";}
+	if (keys %servers >= POOLMAX) {return AE::log warn=>"refuse to start due poolmax constraint";}
 	my $confname=$opts{config};
 	my $srv;
 	$srv=new mkrace::server(
@@ -80,7 +72,7 @@ sub startserver {
 			my $w="startwatcher".rand;
 			$watchers{$w}=AE::timer 3, 0, sub {&startserver(); delete $watchers{$w};}
 		},
-		ondrain=>sub {$srv->stop if keys %servers>mk::opts::POOLMIN});
+		ondrain=>sub {$srv->stop if keys %servers>POOLMIN});
 	$servers{$confname}=$srv;
 	$srv->start;
 }

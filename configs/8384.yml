@@ -1,0 +1,18 @@
+args: 
+  - tail
+  - -n0
+  - -f
+  - /home/disarmer/.teeworlds/server-ng/8384.log
+
+votemanager:
+  globalmapfilter: antimultimap
+
+options: 
+  #опции, которые напрямую попадают в конфиг
+  sv_port: 8384
+  ec_port: 8384
+  sv_name: antimultimap
+  tune:
+    hook_length: 1000
+    gravity: 0
+    grenade_curvature: 0

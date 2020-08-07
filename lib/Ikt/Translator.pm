@@ -12,18 +12,19 @@ my %inflight;
 
 sub translate($$&) {
 	my ($lang, $text, $sub)=@_;
-	return if length $text < 5;
 	my $k="$lang-$text";
 	if($inflight{$k}){
 		return push @{$inflight{$k}},$sub;
 	}
 	push @{$inflight{$k}},$sub;
 	my $enctext=uri_escape_utf8($text);
+	my $start=AE::now;
 	http_get "https://translate.yandex.net/api/v1.5/tr.json/translate?key=${yakey}&text=$enctext&lang=$lang",
 	  persistent=>1,
 	  keepalive=>1,
 	  timeout=>10,
 	  sub {
+		AE::log trace=>"translated in %.1f ms", 1000*(AE::now - $start);
 		my $j;
 		eval{ $j=decode_json $_[0]} or return warn __PACKAGE__." can't parse json: ".$_[0];
 		#use Data::Dumper;warn Dumper [$text, $j->{text}->[0]];

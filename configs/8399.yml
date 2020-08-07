@@ -2,7 +2,7 @@ args:
   - tail
   - -n0
   - -f
-  - /home/disarmer/.teeworlds/server-ng/debugn5.log
+  - /home/disarmer/.teeworlds/server-ng/8399.log
 
 #globalmapfiter: mk_
 

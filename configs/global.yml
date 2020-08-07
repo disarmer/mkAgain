@@ -10,12 +10,14 @@ votemanager:
 #      - on:  "tune gun_curvature 5"
 #      - off: "tune gun_curvature 0"
 
+basedir: /home/disarmer/.teeworlds/server-ng
+map_default: ddrace_destiny
+
 options: 
   #опции, которые напрямую попадают в конфиг
   ec_password: 404
   ec_output_level: 2
   ec_bindaddr: 127.0.0.1
-  sv_map: ddrace_destiny
   sv_gametype: DDRace
   sv_suicide_prevention: 1
   sv_max_clients: 64
